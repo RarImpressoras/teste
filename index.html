@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leitor de QR Code</title>
+</head>
+<body>3
+  <video id="video" width="300" height="200"></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <div id="result"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const resultDiv = document.getElementById('result');
+    const constraints = { video: true };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(stream) {
+        video.srcObject = stream;
+        video.play();
+        requestAnimationFrame(tick);
+      })
+      .catch(function(err) {
+        console.error(err);
+      });
+
+    function tick() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          resultDiv.innerHTML = 'Texto do QR Code: ' + code.data;
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+  </script>
+</body>
+</html>
