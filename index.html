@@ -3,19 +3,57 @@
 <head>
   <title>Leitor de QR Code</title>
 </head>
-<body>3
+<body>
   <video id="video" width="300" height="200"></video>
   <canvas id="canvas" style="display: none;"></canvas>
   <div id="result"></div>
+  <button id="switchCameraBtn">Trocar Câmera</button>
 
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const resultDiv = document.getElementById('result');
-    const constraints = { video: true };
+    const switchCameraBtn = document.getElementById('switchCameraBtn');
+    let currentCamera = 'environment'; // 'environment' para câmera traseira, 'user' para câmera frontal
 
-    navigator.mediaDevices.getUserMedia(constraints)
+    const getConstraints = () => {
+      return {
+        video: {
+          facingMode: currentCamera
+        }
+      };
+    };
+
+    const switchCamera = () => {
+      if (currentCamera === 'environment') {
+        currentCamera = 'user';
+      } else {
+        currentCamera = 'environment';
+      }
+      restartVideoStream();
+    };
+
+    const restartVideoStream = () => {
+      const stream = video.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => {
+        track.stop();
+      });
+      navigator.mediaDevices.getUserMedia(getConstraints())
+        .then(function(stream) {
+          video.srcObject = stream;
+          video.play();
+          requestAnimationFrame(tick);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+    };
+
+    switchCameraBtn.addEventListener('click', switchCamera);
+
+    navigator.mediaDevices.getUserMedia(getConstraints())
       .then(function(stream) {
         video.srcObject = stream;
         video.play();
